@@ -1,0 +1,141 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model CategoriaProducto {
+  id              Int       @id @default(autoincrement())
+  nombreCategoria String
+  inventarios     Inventario[]
+}
+
+model Cita {
+  id          Int       @id @default(autoincrement())
+  mascotaId   Int
+  veterinarioId Int
+  fechaCita   DateTime
+  horaCita    DateTime
+  motivoCita  String
+  mascota     Mascota   @relation(fields: [mascotaId], references: [id])
+  veterinario Veterinario @relation(fields: [veterinarioId], references: [id])
+  facturas    Factura[]
+  historialesClinicos HistorialClinico[]
+}
+
+model Dueno {
+  id             Int       @id @default(autoincrement())
+  nombreDueno    String
+  apellidoDueno  String
+  direccionDueno String
+  telefonoDueno  Int
+  correoDueno    String
+  mascotas       Mascota[]
+}
+
+model Empleado {
+  id              Int       @id @default(autoincrement())
+  nombreEmpleado  String
+  apellidoEmpleado String
+  telefonoEmpleado Int
+  correoEmpleado  String
+  rolId          Int
+  rol            Rol       @relation(fields: [rolId], references: [id])
+  usuario        Usuario?  @relation("EmpleadoUsuario") 
+}
+
+model Usuario {
+  id             Int       @id @default(autoincrement())
+  correo         String    @unique
+  contrasena     String
+  empleadoId     Int      @unique // Añadir @unique
+  empleado       Empleado  @relation("EmpleadoUsuario", fields: [empleadoId], references: [id])
+  sesion         Sesion?
+}
+
+model Sesion {
+  id             Int       @id @default(autoincrement())
+  usuarioId      Int      @unique // Añadir @unique
+  token          String    @unique
+  creadoEn       DateTime  @default(now())
+  usuario        Usuario   @relation(fields: [usuarioId], references: [id])
+}
+
+model Factura {
+  id          Int       @id @default(autoincrement())
+  citaId      Int
+  productoId  Int
+  montoTotal  Float
+  metodoPagoId Int
+  descripcion String
+  fechaPago   DateTime
+  cita        Cita      @relation(fields: [citaId], references: [id])
+  producto    Inventario @relation(fields: [productoId], references: [id])
+  metodoPago  MetodoPago @relation(fields: [metodoPagoId], references: [id])
+}
+
+model HistorialClinico {
+  id                    Int       @id @default(autoincrement())
+  mascotaId             Int
+  citaId                Int
+  descripcionDiagnostico String
+  descripcionTratamiento String
+  productoId            Int
+  mascota               Mascota   @relation(fields: [mascotaId], references: [id])
+  cita                  Cita      @relation(fields: [citaId], references: [id])
+  producto              Inventario @relation(fields: [productoId], references: [id])
+}
+
+model Inventario {
+  id                Int       @id @default(autoincrement())
+  nombreProducto    String
+  cantidadProducto  Int
+  precioUnitario    Float
+  categoriaId       Int
+  fechaVencimiento  DateTime
+  categoria         CategoriaProducto @relation(fields: [categoriaId], references: [id])
+  facturas          Factura[]
+  historialesClinicos HistorialClinico[]
+}
+
+model Mascota {
+  id              Int       @id @default(autoincrement())
+  nombreMascota   String
+  especieMascota  String
+  razaMascota     String
+  edadMascota     Int
+  fechaNacimiento DateTime
+  duenoId         Int
+  dueno           Dueno     @relation(fields: [duenoId], references: [id])
+  citas           Cita[]
+  historialesClinicos HistorialClinico[]
+}
+
+model MetodoPago {
+  id          Int       @id @default(autoincrement())
+  tipo        String
+  detallePago String?
+  facturas    Factura[]
+}
+
+model Rol {
+  id         Int       @id @default(autoincrement())
+  nombreRol  String
+  empleados  Empleado[]
+}
+
+model Veterinario {
+  id                    Int       @id @default(autoincrement())
+  nombreVeterinario     String
+  especialidadVeterinario String
+  citas                 Cita[]
+}
