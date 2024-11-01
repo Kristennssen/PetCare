@@ -1,6 +1,8 @@
 const express = require('express');
 require('dotenv').config();
 const prisma = require('../prisma/prisma.js');
+const path = require('path');
+const cors = require('cors');
 const categoriaProductoRoutes = require('./routes/categoriaProductoRoute');
 const citaRoutes = require('./routes/citaRoute');
 const duenoRoutes = require('./routes/duenoRoute');
@@ -18,8 +20,19 @@ const authenticateToken = require('./middleware/authenticateToken');
 const app = express();
 const PORT = process.env.PORT;
 
+// Configuración de CORS
+const corsOptions = {
+  origin: 'http://127.0.0.1:5500', // La URL exacta de tu frontend
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true // Permite credenciales
+};
 
+app.use(cors(corsOptions));
 app.use(express.json());
+
+// Servir archivos estáticos desde la carpeta 'public'
+app.use(express.static(path.join(__dirname, './public')));
 
 app.use('/api/auth', authRoutes);
 

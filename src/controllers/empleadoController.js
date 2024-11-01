@@ -1,4 +1,5 @@
 const prisma = require('../../prisma/prisma.js');
+const bcrypt = require('bcrypt');
 
 const getEmpleados = async (req, res) => {
     try {
@@ -36,7 +37,13 @@ const getEmpleadoById = async (req, res) => {
 
 const createEmpleado = async (req, res) => {
     const { nombreEmpleado, apellidoEmpleado, telefonoEmpleado, correoEmpleado, rolId, usuario } = req.body;
+
+    if (!nombreEmpleado || !apellidoEmpleado || !telefonoEmpleado || !correoEmpleado || !rolId || !usuario || !usuario.correo || !usuario.contrasena) {
+        return res.status(400).json({ error: 'All fields are required' });
+    }
+
     try {
+        const hashedPassword = await bcrypt.hash(usuario.contrasena, 10);
         const newEmpleado = await prisma.empleado.create({
             data: {
                 nombreEmpleado,
@@ -45,7 +52,10 @@ const createEmpleado = async (req, res) => {
                 correoEmpleado,
                 rolId,
                 usuario: {
-                    create: usuario,
+                    create: {
+                        correo: usuario.correo,
+                        contrasena: hashedPassword,
+                    },
                 },
             },
         });
